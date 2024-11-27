@@ -1,7 +1,7 @@
 import User from '../models/User.model.js'
 import bcrypt from 'bcrypt'
 
-const signup = async (req, res) => {
+const signup = async (req, res, next) => {
     const { username, email, password } = req.body
     // Validación con express-validator
     // Encriptamos la contraseña con bcrypt -> con mongoose de otra manera
@@ -16,7 +16,7 @@ const signup = async (req, res) => {
         const userCreated = await userToDb.save()
         res.json({ userCreated })
     } catch (error) {
-        res.json({ error: error.message, code: error.code })
+        next(error)
     }
 }
 
