@@ -24,6 +24,7 @@ const signup = async (req, res, next) => {
 
 const signin = async (req, res, next) => {
     const { email, password } = req.body
+    console.log(req.body)
     // Validación con express-validator
 
     try {
@@ -42,7 +43,41 @@ const signin = async (req, res, next) => {
     }
 }
 
+const google = async (req, res, next) => {
+    const { name, email, googlePhotoUrl } = req.body
+    try {
+        const userDB = await User.findOne({ email })
+        if (userDB) {
+            const token = jwt.sign({ uid: userDB._id }, process.env.JWT_SECRET, { expiresIn: 60 * 30 })
+            const { password: pass, ...rest } = userDB._doc
+            res.status(200).cookie('access_token', token, {
+                httpOnly: true
+            }).json(rest)
+        } else {
+            const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
+            const hashedPassword = await bcrypt.hash(generatedPassword, 10)
+            const newUser = new User({
+                username: name.toLowerCase().split(' ').join('') + Math.random().toString(9).slice(-4),
+                email,
+                password: hashedPassword,
+                profilePicture: googlePhotoUrl
+            })
+            const userCreate = await newUser.save()
+            const token = jwt.sign({ uid: userCreate._id }, process.env.JWT_SECRET, { expiresIn: 60 * 30 })
+            const { password, ...rest } = userCreate
+            res.status(200).cookie('access_token', token, {
+                httpOnly: true
+            }).json(rest)
+
+        }
+    } catch (error) {
+        next(error)
+    }
+
+}
+
 export {
     signup,
-    signin
+    signin,
+    google
 }
