@@ -1,5 +1,7 @@
+import { validationError } from '../middlewares/handleErrors.js'
 import User from '../models/User.model.js'
-import bcrypt from 'bcrypt'
+import bcrypt, { compare } from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 const signup = async (req, res, next) => {
     const { username, email, password } = req.body
@@ -20,6 +22,27 @@ const signup = async (req, res, next) => {
     }
 }
 
+const signin = async (req, res, next) => {
+    const { email, password } = req.body
+    // Validación con express-validator
+
+    try {
+        const userDB = await User.findOne({ email })
+        if (!userDB) return next(validationError(404, "No existe usuario registrado con ese email"))
+        const validPassword = await compare(password, userDB.password)
+        if (!validPassword) return next(validationError(400, "Contraseña incorrecta"))
+        const token = jwt.sign({ uid: userDB._id }, process.env.JWT_SECRET, { expiresIn: 60 * 30 })
+        const { password: pass, ...rest } = userDB._doc
+        res.status(200).cookie('access_token', token, {
+            httpOnly: true
+        }).json(rest)
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 export {
-    signup
+    signup,
+    signin
 }
