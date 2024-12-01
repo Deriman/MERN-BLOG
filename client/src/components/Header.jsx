@@ -10,7 +10,7 @@ const Header = () => {
     const { currentUser } = useSelector(state => state.user)
     const { theme } = useSelector(state => state.theme)
     const dispatch = useDispatch()
-    console.log(currentUser)
+    //console.log(currentUser)
     return (
         <Navbar className="border-b-2">
             <Link to='/' className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white">
